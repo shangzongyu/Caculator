@@ -5,3 +5,4 @@ Makefile*
 *.Debug
 *.Release
 *.user
+.vscode/settings.json
