@@ -33,27 +33,27 @@ RC_FILE += desktop.rc
 RESOURCES += \
     rec.qrc
 
-# ����ģ��Ӧ�ó���
+# 程序模板应用程序
 TEMPLATE = app
 
-#ָ��rcc���.qrc�ļ�ת����qrc_*.h�ļ��Ĵ��Ŀ¼
+# 指定 rcc 命令将 .qrc 文件转换 成qrc_*.h 文件的存放目录
 RCC_DIR += ./tmp/rcc
 
-#ָ��moc�����Q_OBJECT��ͷ�ļ�ת���ɱ�׼.h�ļ��Ĵ��Ŀ¼
+# 指定 moc 命令将含Q_OBJECT的头文件转换成标准.h文件的存放目录
 MOC_DIR += ./tmp/moc
 
-#ָ��Ŀ���ļ�(obj)�Ĵ��Ŀ¼
+# 指定目标文件(obj)的存放目录
 OBJECTS_DIR += ./tmp/obj
 
 UI_DIR += tmp/ui
 
-#������debug��releaseĿ¼
+# 不生成 debug 和 release 目录
 CONFIG -= debug_and_release
-
 CONFIG(debug,debug|release):   TARGET = Caculatord
 CONFIG(release,debug|release): TARGET = Caculator
-#ָ�����ɵ�Ӧ�ó�����õ�Ŀ¼
-DESTDIR = ./bin
 
-#warn_on���ָ���qmakeҪ�ѱ���������Ϊ���������Ϣ�ġ�1
+# warn_on 部分告诉 qmake 要把编译器设置为输出警告信息的
 CONFIG += warn_on
+
+# 指定生成的应用程序放置的目录
+DESTDIR = ./bin
