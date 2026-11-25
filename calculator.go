@@ -6,6 +6,15 @@ import (
 	"strings"
 )
 
+const (
+	clearKey     = '\x1b' // ASCII Escape
+	backspaceKey = '\b'
+	operatorKeys = "+-*/"
+
+	maxEntryLength          = 19 // Includes the decimal point.
+	resultSignificantDigits = 15
+)
+
 type entryState int
 
 const (
@@ -30,13 +39,14 @@ func (c *Calculator) Display() string {
 	return c.entry
 }
 
-// Press accepts a keypad character, backspace (\b), or clear (Escape).
+// Press enters one digit or applies one keypad action.
 func (c *Calculator) Press(key rune) {
 	switch {
-	case key == '\x1b' || key == '\b' && c.state == showingError:
+	case key == clearKey || (key == backspaceKey && c.state == showingError):
 		*c = Calculator{}
-	case key == '\b':
+	case key == backspaceKey:
 		if c.state == entering && len(c.entry) > 0 {
+			// Editable input contains only ASCII digits and the decimal point.
 			c.entry = c.entry[:len(c.entry)-1]
 		}
 	case key >= '0' && key <= '9' || key == '.':
@@ -52,10 +62,11 @@ func (c *Calculator) Press(key rune) {
 		} else if c.entry == "0" {
 			c.entry = ""
 		}
-		if len(c.entry) < 19 {
+		if len(c.entry) < maxEntryLength {
 			c.entry += string(key)
 		}
-	case strings.ContainsRune("+-*/", key):
+	case strings.ContainsRune(operatorKeys, key):
+		// While waiting for the next operand, a second operator replaces the pending one.
 		if c.state == showingError || c.state == entering && !c.commit() {
 			return
 		}
@@ -69,6 +80,7 @@ func (c *Calculator) Press(key rune) {
 	}
 }
 
+// commit records the first operand or applies the pending operation to the current entry.
 func (c *Calculator) commit() bool {
 	value, err := strconv.ParseFloat(c.Display(), 64)
 	switch c.operator {
@@ -85,7 +97,7 @@ func (c *Calculator) commit() bool {
 		*c = Calculator{entry: "Error", state: showingError}
 		return false
 	}
-	c.accumulator = value
+	c.accumulator = value // Chained operations use the value before display rounding.
 	if c.operator != 0 {
 		c.entry = formatResult(value)
 	}
@@ -93,8 +105,8 @@ func (c *Calculator) commit() bool {
 }
 
 func formatResult(value float64) string {
-	if value == 0 {
+	if value == 0 { // Display both positive and negative zero as 0.
 		return "0"
 	}
-	return strconv.FormatFloat(value, 'g', 15, 64)
+	return strconv.FormatFloat(value, 'g', resultSignificantDigits, 64)
 }

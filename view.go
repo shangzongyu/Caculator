@@ -6,11 +6,6 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-const (
-	clearKey     = '\x1b'
-	backspaceKey = '\b'
-)
-
 var (
 	paper = ui.Hex("#efede5")
 	ink   = ui.Hex("#1e3430")
@@ -92,7 +87,7 @@ func (calc *Calculator) button(c *ui.Context, key rune, scale float32) ui.Elemen
 	switch {
 	case key == clearKey:
 		color, size = sage, 17
-	case key == backspaceKey || strings.ContainsRune("+-*/", key):
+	case key == backspaceKey || strings.ContainsRune(operatorKeys, key):
 		color = sage
 	case key == '=':
 		color = amber
@@ -117,7 +112,7 @@ func (calc *Calculator) keyboard(event ui.InputEvent) bool {
 		// Use the character the keyboard layout produced, including keypad operators.
 		handled := false
 		for _, key := range event.Text {
-			if strings.ContainsRune("0123456789.+-*/=", key) {
+			if strings.ContainsRune("0123456789.="+operatorKeys, key) {
 				calc.Press(key)
 				handled = true
 			}
