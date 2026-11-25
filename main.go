@@ -33,6 +33,8 @@ func main() {
 		mygo.App.OnLocaleChanged(func(locale string) {
 			window.SetTitle(locales.In(locale).WindowTitle())
 			mygo.App.SetMenu(app.menu(locale, selectAppearance))
+			// Queue a redraw after the native menu finishes handling the selection.
+			window.Invalidate()
 		})
 	})
 	if err := mygo.App.Run(); err != nil {
