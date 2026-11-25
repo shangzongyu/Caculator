@@ -3,12 +3,13 @@ package main
 import (
 	"testing"
 
+	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 )
 
 func TestKeypadAndKeyboardShareState(t *testing.T) {
-	var calc Calculator
-	window := ui.NewTester(calc.view, windowWidth, windowHeight)
+	var app calculatorView
+	window := ui.NewTester(app.view, windowWidth, windowHeight)
 	checkKeyboard := func() {
 		t.Helper()
 		if active, direct := window.TextInputActive(); !active || !direct {
@@ -29,8 +30,8 @@ func TestKeypadAndKeyboardShareState(t *testing.T) {
 	window.TypeKey(ui.Shift, ui.Key8, "*")
 	click("4")
 	window.Key(0, ui.KeyEnter)
-	if calc.Display() != "20" || !window.HasText("20") {
-		t.Fatalf("after mixed input, display = %s, visible text = %q", calc.Display(), window.Texts())
+	if app.calc.Display() != "20" || !window.HasText("20") {
+		t.Fatalf("after mixed input, display = %s, visible text = %q", app.calc.Display(), window.Texts())
 	}
 	window.Key(0, ui.KeyEscape)
 	window.Type("12.3")
@@ -38,14 +39,14 @@ func TestKeypadAndKeyboardShareState(t *testing.T) {
 	click("加")
 	click("4")
 	click("等于")
-	if calc.Display() != "16" || !window.HasText("16") {
-		t.Fatalf("after click on equals, display = %s, visible text = %q", calc.Display(), window.Texts())
+	if app.calc.Display() != "16" || !window.HasText("16") {
+		t.Fatalf("after click on equals, display = %s, visible text = %q", app.calc.Display(), window.Texts())
 	}
 }
 
 func TestResizeDuringCalculation(t *testing.T) {
-	var calc Calculator
-	window := ui.NewTester(calc.view, windowWidth, windowHeight)
+	var app calculatorView
+	window := ui.NewTester(app.view, windowWidth, windowHeight)
 	window.Type("12+")
 	window.SetSize(720, 640)
 	large, ok := window.Find("等于")
@@ -67,14 +68,14 @@ func TestResizeDuringCalculation(t *testing.T) {
 	if err := window.Click("等于"); err != nil {
 		t.Fatal(err)
 	}
-	if got := calc.Display(); got != "46" || !window.HasText("46") {
+	if got := app.calc.Display(); got != "46" || !window.HasText("46") {
 		t.Fatalf("after resizing, display = %q, want 46", got)
 	}
 }
 
 func TestLongNumbersFitAcrossWindowShapes(t *testing.T) {
-	var calc Calculator
-	window := ui.NewTester(calc.view, windowWidth, windowHeight)
+	var app calculatorView
+	window := ui.NewTester(app.view, windowWidth, windowHeight)
 	const entry = "9876543210987654321"
 	window.Type("1234567890123456789+" + entry)
 	const pending = "1234567890123456789 +"
@@ -97,8 +98,51 @@ func TestLongNumbersFitAcrossWindowShapes(t *testing.T) {
 		}
 		const rounding = 1 // DIP
 		if hint.Y+hint.H > result.Y+rounding || result.Y+result.H > clear.Y+rounding ||
-			clear.Y != backspace.Y || clear.X+clear.W > backspace.X || clear.W <= backspace.W {
+			clear.Y != backspace.Y || clear.X+clear.W > backspace.X || clear.W+rounding < 3*backspace.W {
 			t.Fatalf("at %v, unexpected placement: hint %+v, result %+v, clear %+v, backspace %+v", size, hint, result, clear, backspace)
 		}
+	}
+}
+
+func TestSwitchAppearanceDuringCalculation(t *testing.T) {
+	var app calculatorView
+	window := ui.NewTester(app.view, minWindowWidth, minWindowHeight)
+	window.Type("12+")
+	previous := window.Image().At(0, minWindowHeight-1)
+	menu := app.appearanceMenu(window.Frame)
+	if window.HasText(menu.Label) {
+		t.Fatal("the appearance menu is still visible inside the calculator")
+	}
+	want := []string{"暖砂", "石墨", "瓷白"}
+	if menu.Label != "外观" || len(menu.Submenu) != len(want) {
+		t.Fatalf("unexpected appearance menu: %q with %d items", menu.Label, len(menu.Submenu))
+	}
+	for index, item := range menu.Submenu {
+		if item.Label != want[index] || item.Type != mygo.MenuItemRadio || item.IsChecked() != (index == 0) {
+			t.Fatalf("unexpected menu item %d: %q, %s, checked=%v", index, item.Label, item.Type, item.IsChecked())
+		}
+	}
+	for offset := range menu.Submenu {
+		index := (offset + 1) % len(menu.Submenu)
+		item := menu.Submenu[index]
+		name := want[index]
+		item.Click(item, nil)
+		if selected := appearances[app.appearance].name; selected != name {
+			t.Fatalf("appearance = %q, want %q", selected, name)
+		}
+		current := window.Image().At(0, minWindowHeight-1)
+		if current == previous {
+			t.Fatalf("background did not change after selecting %s", name)
+		}
+		previous = current
+		if app.calc.Display() != "12" || !window.HasText("12 +") {
+			t.Fatalf("pending calculation changed after selecting %s", name)
+		}
+	}
+
+	window.Type("3")
+	window.Key(0, ui.KeyEnter)
+	if got := app.calc.Display(); got != "15" || !window.HasText("15") {
+		t.Fatalf("after switching appearances, display = %q, want 15", got)
 	}
 }
