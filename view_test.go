@@ -1,0 +1,44 @@
+package main
+
+import (
+	"testing"
+
+	"github.com/egoist/mygo/ui"
+)
+
+func TestKeypadAndKeyboardShareState(t *testing.T) {
+	var calc Calculator
+	window := ui.NewTester(calc.view, windowWidth, windowHeight)
+	checkKeyboard := func() {
+		t.Helper()
+		if active, direct := window.TextInputActive(); !active || !direct {
+			t.Fatalf("native character input active = %v, direct = %v", active, direct)
+		}
+	}
+	checkKeyboard()
+	window.TypeKey(0, ui.Key2, "2")
+	window.TypeKey(ui.Shift, ui.KeyEqual, "+")
+	click := func(name string) {
+		t.Helper()
+		if err := window.Click(name); err != nil {
+			t.Fatal(err)
+		}
+	}
+	click("3")
+	checkKeyboard()
+	window.TypeKey(ui.Shift, ui.Key8, "*")
+	click("4")
+	window.Key(0, ui.KeyEnter)
+	if calc.Display() != "20" || !window.HasText("20") {
+		t.Fatalf("after mixed input, display = %s, visible text = %q", calc.Display(), window.Texts())
+	}
+	window.Key(0, ui.KeyEscape)
+	window.Type("12.3")
+	window.Key(0, ui.KeyBackspace)
+	click("加")
+	click("4")
+	click("等于")
+	if calc.Display() != "16" || !window.HasText("16") {
+		t.Fatalf("after click on equals, display = %s, visible text = %q", calc.Display(), window.Texts())
+	}
+}

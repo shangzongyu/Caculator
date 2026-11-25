@@ -1,36 +1,35 @@
 # Caculator
 
-使用 C++ / Qt Widgets 编写的桌面计算器，支持基本的加减乘除。
+使用 Go 和 MyGo 原生 UI 编写的桌面计算器。保留 Qt 版的键位布局和逐步计算方式，顶部显示当前输入以及待执行的运算。
 
-## 构建依赖
+## 运行
 
-- Qt 6（Core、Gui、Widgets 模块及 qmake）
-- C++ 编译器和 make；macOS 可使用 Xcode 提供的工具链
-
-本机已使用 Apple Silicon、Qt 6.12.0 和 Xcode 工具链编译、运行验证。
-无需额外安装 Qt Creator，也不需要 Qt 5 兼容模块。
-
-## macOS 编译与运行
-
-在项目根目录执行：
+安装 Go 1.27.3 或更高版本，在项目根目录运行：
 
 ```sh
-mkdir -p build-local
-cd build-local
-qmake ../Caculator.pro CONFIG+=release
-make -j4
-open bin/Caculator.app
+go run .
 ```
 
-也可以直接运行可执行文件，查看终端日志：
+开发时可用 `go tool mygo dev` 启用热重载。MyGo 及其命令行工具的版本由 go.mod 固定。
+
+## 按键
+
+| 操作 | 键盘 |
+| --- | --- |
+| 输入数字或小数点 | `0`–`9`、`.` |
+| 加、减、乘、除 | `+`、`-`、`*`、`/` |
+| 计算结果 | `Enter` 或 `=` |
+| 删除最后一位 | `Backspace` |
+| 清空 | `Esc` |
+
+连续运算按输入顺序执行，例如 `2 + 3 × 4 =` 得到 `20`。连续按两个运算符时采用后一个。除以零时显示 `Error`，直接输入数字或小数点即可重新开始。
+
+## 测试与 macOS 打包
 
 ```sh
-./bin/Caculator.app/Contents/MacOS/Caculator
+go test ./...
+go tool mygo build -skip-dmg
+open "build/darwin-$(go env GOARCH)/计算器.app"
 ```
 
-界面样式和图片均已嵌入 Qt 资源文件，启动时无需复制图片或设置工作目录。
-按数字键、`+`、`-`、`*`、`/` 和 `.` 输入，按 `Enter` 或 `=` 计算，
-按 `Backspace` 删除一位，按 `Esc` 清空。连续运算按输入顺序执行。
-可拖动顶部区域移动窗口，使用左上角按钮关闭或最小化。
-生成的应用依赖本机 Qt 动态库；若要分发到其他 Mac，需另行使用
-`macdeployqt` 打包依赖。
+运行 `go tool mygo build` 可同时生成磁盘映像。
