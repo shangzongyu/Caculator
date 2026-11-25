@@ -6,24 +6,13 @@
 #ifndef ALGORITHMSTRATEGYFACTORY_H
 #define ALGORITHMSTRATEGYFACTORY_H
 
-#include <QObject>
-#include "AddStrategy.h"
-#include "SubStrategy.h"
-#include "MulStrategy.h"
-#include "DivStrategy.h"
+#include <memory>
+#include "AlgorithmStrategy.h"
 
 class AlgorithmStrategyFactory
 {
-private:
-    AlgorithmStrategyFactory();
-
 public:
-    static AlgorithmStrategyFactory* Instance();
-    static  void Release();
-    AlgorithmStrategy* createStrategy(EAlgorithmType eType);
-
-private:
-    static AlgorithmStrategyFactory* m_pInstance;
+    static std::unique_ptr<AlgorithmStrategy> createStrategy(EAlgorithmType operation);
 };
 
 #endif // ALGORITHMSTRATEGYFACTORY_H

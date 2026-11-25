@@ -1,26 +1,32 @@
 #include "AlgorithmContext.h"
+#include "AlgorithmStrategyFactory.h"
+
+#include <limits>
 
 /*******************************************************************************
- * 函数名称： Calculate
- * 功能描述： 计算
- * 参数列表： eType  - 操作类型
+ * 函数名称： AlgorithmContext
+ * 功能描述： 根据操作类型创建相应的算法策略
+ * 参数列表： operation - 操作类型
  *
  * 返回结果： 无
  ******************************************************************************/
-AlgorithmContext::AlgorithmContext(EAlgorithmType eType)
+AlgorithmContext::AlgorithmContext(EAlgorithmType operation)
+    : m_strategy(AlgorithmStrategyFactory::createStrategy(operation))
 {
-    m_pStrategy = AlgorithmStrategyFactory::Instance()->createStrategy(eType);
 }
 
 /*******************************************************************************
  * 函数名称： Calculate
  * 功能描述： 计算
- * 参数列表： leftOperate  - 左操作数
- *           rightOperate - 右操作数
+ * 参数列表： leftOperand  - 左操作数
+ *           rightOperand - 右操作数
  *
- * 返回结果： 结果
+ * 返回结果： 结果，操作类型未知时返回 NaN
  ******************************************************************************/
-QString AlgorithmContext::Calculate(const QString leftOperate, const QString rightOperate)
+double AlgorithmContext::Calculate(double leftOperand, double rightOperand) const
 {
-    return m_pStrategy->getResult(leftOperate, rightOperate);
+    if (!m_strategy)
+        return std::numeric_limits<double>::quiet_NaN();
+
+    return m_strategy->getResult(leftOperand, rightOperand);
 }

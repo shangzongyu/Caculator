@@ -11,9 +11,7 @@
 class MulStrategy : public AlgorithmStrategy
 {
 public:
-    MulStrategy();
-
-    QString getResult(const QString leftOperate, const QString rightOperate);
+    double getResult(double leftOperand, double rightOperand) const override;
 };
 
 #endif // MULSTRATEGY_H

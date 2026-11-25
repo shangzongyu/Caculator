@@ -1,6 +1,14 @@
 #include "Ui.h"
 
-#include <QDebug>
+#include "AlgorithmContext.h"
+
+#include <QGridLayout>
+#include <cmath>
+
+namespace {
+constexpr int maxInputLength = 19; // 操作数输入的最大长度为 19，计算结果不受此限制
+constexpr int displayPrecision = 15;
+}
 
 /*******************************************************************************
  * 函数名称： Ui
@@ -14,17 +22,6 @@ Ui::Ui(QWidget *parent) :
 {
     init();
     layout();
-}
-
-/*******************************************************************************
- * 函数名称： Ui
- * 功能描述： Ui析构函数
- * 参数列表： void
- *
- * 返回结果： 无
- ******************************************************************************/
-Ui::~Ui()
-{
 }
 
 /*******************************************************************************
@@ -61,7 +58,6 @@ void Ui::init()
     m_display.setText("0"); // 结果显示窗体的默认内容是为0
     m_display.setAlignment(Qt::AlignVCenter | Qt::AlignRight); // 结果显示窗体的文本设置向右对齐,上下居中
     m_display.setReadOnly(true); // 结果显示窗体的文本设置为只读
-    m_display.setMaxLength(19); // 结果显示窗体的的最大长度的设置为19
 
     m_clearButton.setFixedSize(210,75); // 设置清除按钮大小
     m_clearButton.setObjectName("clear_btn"); // 设置清除按钮的类名
@@ -73,20 +69,20 @@ void Ui::init()
 
     m_addButton.setFixedSize(90,75); // 设置加法按钮大小
     m_addButton.setObjectName("add_btn");  // 设置加法按钮的类名
-    connect(&m_addButton, SIGNAL(clicked()), this, SLOT(addButtonClicked())); // 设置加法按钮和相应的槽函数关联
+    connect(&m_addButton, &Button::clicked, this, [this] { selectOperator(EAlgorithmType_Add); }); // 设置加法按钮和相应的处理函数关联
 
     m_subButton.setFixedSize(90,75); // 设置减法按钮大小
     m_subButton.setObjectName("sub_btn"); // 设置减法按钮的类名
-    connect(&m_subButton, SIGNAL(clicked()), this, SLOT(subButtonClicked())); // 设置减法按钮和相应的槽函数关联
+    connect(&m_subButton, &Button::clicked, this, [this] { selectOperator(EAlgorithmType_Sub); }); // 设置减法按钮和相应的处理函数关联
 
 
     m_mulButton.setFixedSize(90,75); // 设置乘法按钮大小
     m_mulButton.setObjectName("mul_btn"); // 设置乘法按钮的类名
-    connect(&m_mulButton, SIGNAL(clicked()), this, SLOT(mulButtonClicked())); // 设置乘法按钮和相应的槽函数关联
+    connect(&m_mulButton, &Button::clicked, this, [this] { selectOperator(EAlgorithmType_Mul); }); // 设置乘法按钮和相应的处理函数关联
 
     m_divButton.setFixedSize(90,75); // 设置除法按钮大小
     m_divButton.setObjectName("div_btn"); // 设置除法按钮的类名
-    connect(&m_divButton, SIGNAL(clicked()), this, SLOT(divButtonClicked())); // 设置除法按钮和相应的槽函数关联
+    connect(&m_divButton, &Button::clicked, this, [this] { selectOperator(EAlgorithmType_Div); }); // 设置除法按钮和相应的处理函数关联
 
     m_dotButton.setFixedSize(60, 75); // 设置小数点按钮大小
     m_dotButton.setObjectName("dot_btn"); // 设置小数点按钮的类名
@@ -96,11 +92,6 @@ void Ui::init()
     m_equalButton.setObjectName("equal_btn"); // 设置等号按钮的类名
     connect(&m_equalButton, SIGNAL(clicked()), this, SLOT(equalButtonClicked())); // 设置等号按钮和相应的槽函数关联
 
-    m_bWaitForOprate = true;
-
-    m_leftOperate = QStringLiteral("0"); // 左操作数设置默认值
-
-    m_eType = EAlgorithmType_Unkonw; // 算法类型设置为未知
 }
 
 /*******************************************************************************
@@ -159,6 +150,15 @@ void Ui::layout()
     pGrindFrame->move(0, 110);
 }
 
+void Ui::startEntry()
+{
+    if (m_state == State::Entering)
+        return;
+
+    m_display.setText(QStringLiteral("0"));
+    m_state = State::Entering;
+}
+
 /*******************************************************************************
  * 函数名称： numButtonClicked
  * 功能描述： 数字按钮的槽函数
@@ -168,164 +168,16 @@ void Ui::layout()
  ******************************************************************************/
 void Ui::numButtonClicked()
 {
-    if (m_display.text() == "Error")
-    {
-        return;
-    }
-
     // 把相应的数字按钮转化为响应的指针
-    Button *pClickedButton = qobject_cast<Button *>(sender());
-    Q_CHECK_PTR(pClickedButton);
-    if ((m_display.text() == QString::number(0)) && (!m_display.text().contains(".")))
-    {
-         m_display.clear();
-    }
+    auto *button = qobject_cast<Button *>(sender());
+    Q_ASSERT(button);
+    startEntry();
 
-    if (m_bWaitForOprate)
-    {
-        m_display.clear();
-        m_display.setText(m_display.text() + pClickedButton->getName());
-
-        m_bWaitForOprate = false;
-    }
-    else
-    {
-        m_display.setText(m_display.text() + pClickedButton->getName());
-    }
-}
-
-/*******************************************************************************
- * 函数名称： addButtonClicked
- * 功能描述： 加法按钮的槽函数
- * 参数列表： void
- *
- * 返回结果： void
- ******************************************************************************/
-void Ui::addButtonClicked()
-{
-    // 算法类型不等于未知
-    if (EAlgorithmType_Unkonw != m_eType)
-    {
-        // 通过算法上下文类调用相应的算法
-        AlgorithmContext contxt(m_eType);
-        m_display.setText(contxt.Calculate(m_leftOperate,
-                                           m_display.text()));
-
-        // 记录结果,为下次计算
-        m_leftOperate = m_display.text();
-    }
-    else
-    {
-        // 记录结果,为下次计算
-        m_leftOperate = m_display.text();
-    }
-
-    m_eType = EAlgorithmType_Add; // 设置算法类型为加法
-    m_bWaitForOprate = true;
-}
-
-/*******************************************************************************
- * 函数名称： subButtonClicked
- * 功能描述： 减法按钮的槽函数
- * 参数列表： void
- *
- * 返回结果： void
- ******************************************************************************/
-void Ui::subButtonClicked()
-{
-    // 算法类型不等于未知
-    if (EAlgorithmType_Unkonw != m_eType)
-    {
-        // 通过算法上下文类调用相应的算法
-        AlgorithmContext contxt(m_eType);
-        m_display.setText(contxt.Calculate(m_leftOperate,
-                                           m_display.text()));
-
-        // 记录结果,为下次计算
-        m_leftOperate = m_display.text();
-    }
-    else
-    {
-        // 记录结果,为下次计算
-        m_leftOperate = m_display.text();
-    }
-
-    m_eType = EAlgorithmType_Sub; // 设置算法类型为减法
-    m_bWaitForOprate = true;
-}
-
-/*******************************************************************************
- * 函数名称： mulButtonClicked
- * 功能描述： 乘法按钮的槽函数
- * 参数列表： void
- *
- * 返回结果： void
- ******************************************************************************/
-void Ui::mulButtonClicked()
-{
-    // 算法类型不等于未知
-    if (EAlgorithmType_Unkonw != m_eType)
-    {
-        // 通过算法上下文类调用相应的算法
-        AlgorithmContext contxt(m_eType);
-        m_display.setText(contxt.Calculate(m_leftOperate,
-                                           m_display.text()));
-
-        // 记录结果,为下次计算
-        m_leftOperate = m_display.text();
-    }
-    else
-    {
-        // 记录结果,为下次计算
-        m_leftOperate = m_display.text();
-    }
-
-    m_bWaitForOprate = true;
-    m_eType = EAlgorithmType_Mul; // 设置算法类型为乘法
-}
-
-/*******************************************************************************
- * 函数名称： divButtonClicked
- * 功能描述： 除法按钮的槽函数
- * 参数列表： void
- *
- * 返回结果： void
- ******************************************************************************/
-void Ui::divButtonClicked()
-{
-    // 算法类型不等于未知
-    if (EAlgorithmType_Unkonw != m_eType)
-    {
-        // 通过算法上下文类调用相应的算法
-        AlgorithmContext contxt(m_eType);
-        m_display.setText(contxt.Calculate(m_leftOperate,
-                                           m_display.text()));
-
-        // 记录结果,为下次计算
-        m_leftOperate = m_display.text();
-    }
-    else
-    {
-        m_leftOperate = m_display.text();
-    }
-
-    m_bWaitForOprate = true;
-    m_eType = EAlgorithmType_Div; // 设置算法类型为除法
-}
-
-/*******************************************************************************
- * 函数名称： clearButtonClicked
- * 功能描述： 清除按钮的槽函数
- * 参数列表： void
- *
- * 返回结果： void
- ******************************************************************************/
-void Ui::clearButtonClicked()
-{
-    m_eType = EAlgorithmType_Unkonw; // 重置算法类型
-    m_display.setText("0"); // 重置文本内容
-    m_leftOperate = QStringLiteral("0"); // 重置左操作数
-    m_bWaitForOprate = true; // 重置标志位
+    const QString text = m_display.text();
+    if (text == QStringLiteral("0"))
+        m_display.setText(button->getName());
+    else if (text.size() < maxInputLength)
+        m_display.setText(text + button->getName());
 }
 
 /*******************************************************************************
@@ -337,22 +189,13 @@ void Ui::clearButtonClicked()
  ******************************************************************************/
 void Ui::dotButtonClicked()
 {
-    // 如果已经有小数点了
-    if (m_display.text().contains("."))
-    {
-        return;
-    }
+    // 开始输入新的操作数时，显示从 0 起步
+    startEntry();
 
-    // 如果显示结果窗体为空
-    if (m_display.text().isEmpty())
-    {
-        m_display.setText("0.");
-    }
-    else
-    {
-        // 否则添加小数点
-        m_display.setText(m_display.text() + ".");
-    }
+    const QString text = m_display.text();
+    // 如果还没有小数点，就添加小数点
+    if (!text.contains(u'.') && text.size() < maxInputLength)
+        m_display.setText(text + u'.');
 }
 
 /*******************************************************************************
@@ -364,25 +207,76 @@ void Ui::dotButtonClicked()
  ******************************************************************************/
 void Ui::delButtonClicked()
 {
-    QString text = "";
-    if (m_display.text().isEmpty())
+    if (m_state == State::Error)
+        clearButtonClicked();
+    else if (m_state == State::Entering)
     {
-        // 如果只有一个数字,删除后重置为0
-        text = "0";
-    }
-    else
-    {
+        QString text = m_display.text();
         // 删除最后一个字符
-        text = m_display.text().remove(m_display.text().size()-1, 1);
-        if (text.isEmpty())
+        text.chop(1);
+        // 如果只有一个数字,删除后重置为0
+        m_display.setText(text.isEmpty() ? QStringLiteral("0") : text);
+    }
+}
+
+/*******************************************************************************
+ * 函数名称： clearButtonClicked
+ * 功能描述： 清除按钮的槽函数
+ * 参数列表： void
+ *
+ * 返回结果： void
+ ******************************************************************************/
+void Ui::clearButtonClicked()
+{
+    m_state = State::Entering; // 重置输入状态
+    m_operation = EAlgorithmType_Unknown; // 重置算法类型
+    m_accumulator = 0.0; // 重置左操作数
+    m_display.setText(QStringLiteral("0")); // 重置文本内容
+}
+
+bool Ui::commitOperand()
+{
+    bool valid;
+    const double operand = m_display.text().toDouble(&valid);
+    if (valid)
+    {
+        // 有待执行的运算时，通过算法上下文类调用相应的算法
+        // 记录结果,为下次计算
+        m_accumulator = m_operation == EAlgorithmType_Unknown
+            ? operand
+            : AlgorithmContext(m_operation).Calculate(m_accumulator, operand);
+        if (std::isfinite(m_accumulator))
         {
-            // 如果只有一个数字,删除后重置为0
-            text = "0";
+            if (m_operation != EAlgorithmType_Unknown)
+                m_display.setText(QString::number(m_accumulator, 'g', displayPrecision));
+            return true;
         }
     }
 
-    // 设置删除后的结果
-    m_display.setText(text);
+    m_state = State::Error;
+    m_operation = EAlgorithmType_Unknown;
+    m_accumulator = 0.0;
+    m_display.setText(QStringLiteral("Error"));
+    return false;
+}
+
+/*******************************************************************************
+ * 函数名称： selectOperator
+ * 功能描述： 响应加、减、乘、除按钮，选择下一步运算
+ * 参数列表： operation - 运算类型
+ *
+ * 返回结果： void
+ ******************************************************************************/
+void Ui::selectOperator(EAlgorithmType operation)
+{
+    if (m_state == State::Error)
+        return;
+    // 等待右操作数时，只更新运算符
+    if (m_state == State::Entering && !commitOperand())
+        return;
+
+    m_operation = operation;
+    m_state = State::AwaitingOperand;
 }
 
 /*******************************************************************************
@@ -394,20 +288,11 @@ void Ui::delButtonClicked()
  ******************************************************************************/
 void Ui::equalButtonClicked()
 {
-//    qDebug() << m_eType;
-//    qDebug() << m_leftOperate;
-//    qDebug() << m_display.text();
-
-    // 算法类型不等于未知
-    if (EAlgorithmType_Unkonw != m_eType)
+    if (m_state != State::Entering || m_operation == EAlgorithmType_Unknown)
+        return;
+    if (commitOperand())
     {
-        // 调用算法上下文类进行计算结果
-        AlgorithmContext contxt(m_eType);
-        m_display.setText(contxt.Calculate(m_leftOperate,
-                                           m_display.text()));
-
-        m_leftOperate = m_display.text(); // 把这此结果记录为左操作数,为了下次计算用
-        m_eType = EAlgorithmType_Unkonw; // 重置算法类型
-        m_bWaitForOprate = true; // 是否在等在操作符号
+        m_operation = EAlgorithmType_Unknown; // 重置算法类型
+        m_state = State::Result;
     }
 }

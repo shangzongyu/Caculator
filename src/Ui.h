@@ -7,38 +7,35 @@
 #define UI_H
 
 #include <QFrame>
-#include <QVector>
 #include <QLineEdit>
-#include <QGridLayout>
-#include <QPalette>
 
 #include "Button.h"
 #include "TitleBar.h"
-#include "AlgorithmContext.h"
+#include "AlgorithmStrategy.h"
 
 class Ui : public QFrame
 {
     Q_OBJECT
 public:
     explicit Ui(QWidget *parent = 0);
-    ~Ui();
 
 private:
     void init();
     void layout();
+    void selectOperator(EAlgorithmType operation);
+    bool commitOperand();
+    void startEntry();
 
-public slots:
+private slots:
     void numButtonClicked();
-    void addButtonClicked();
-    void subButtonClicked();
-    void mulButtonClicked();
-    void divButtonClicked();
     void clearButtonClicked();
     void dotButtonClicked();
     void delButtonClicked();
     void equalButtonClicked();
 
 private:
+    enum class State { Entering, AwaitingOperand, Result, Error };
+
     QLineEdit m_display;
     Button m_clearButton; // 清除按钮
     Button m_delButton;   // 删除按钮
@@ -52,10 +49,9 @@ private:
 
     TitleBar m_titleBar;
 
-    EAlgorithmType m_eType;
-    bool m_bWaitForOprate;
-
-    QString m_leftOperate;
+    State m_state = State::Entering;
+    EAlgorithmType m_operation = EAlgorithmType_Unknown; // 算法类型设置为未知
+    double m_accumulator = 0.0; // 左操作数设置默认值
 };
 
 #endif // UI_H

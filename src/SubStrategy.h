@@ -11,9 +11,7 @@
 class SubStrategy : public AlgorithmStrategy
 {
 public:
-    SubStrategy();
-
-    QString getResult(const QString leftOperate, const QString rightOperate);
+    double getResult(double leftOperand, double rightOperand) const override;
 };
 
 #endif // SUBSTRATEGY_H

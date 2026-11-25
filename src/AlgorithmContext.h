@@ -6,17 +6,16 @@
 #ifndef CONTEXT_H
 #define CONTEXT_H
 
-#include <algorithm>
+#include <memory>
 #include "AlgorithmStrategy.h"
-#include "AlgorithmStrategyFactory.h"
 
 class AlgorithmContext
 {
 public:
-    AlgorithmContext(EAlgorithmType eType);
-    QString Calculate(const QString leftOperate, const QString rightOperate);
+    explicit AlgorithmContext(EAlgorithmType operation);
+    double Calculate(double leftOperand, double rightOperand) const;
 private:
-    AlgorithmStrategy *m_pStrategy;
+    std::unique_ptr<AlgorithmStrategy> m_strategy;
 };
 
 #endif // CONTEXT_H

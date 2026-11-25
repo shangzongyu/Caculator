@@ -11,9 +11,7 @@
 class AddStrategy : public AlgorithmStrategy
 {
 public:
-    AddStrategy();
-
-    QString getResult(const QString leftOperate, const QString rightOperate);
+    double getResult(double leftOperand, double rightOperand) const override;
 };
 
 #endif // ADDSTRATEGY_H
