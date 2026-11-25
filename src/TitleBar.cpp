@@ -27,7 +27,7 @@ void TitleBar::mouseMoveEvent(QMouseEvent *event)
     // 左键按下,然后把窗口移动到相应位置
     if (m_bMouseLeftDonw && (event->buttons() & Qt::LeftButton))
     {
-        QPoint movePot = mapToParent(event->globalPos() - m_MousePosition);
+        QPoint movePot = mapToParent(event->globalPosition().toPoint() - m_MousePosition);
         parentWidget()->move(movePot);
         event->accept();
     }
@@ -47,7 +47,7 @@ void TitleBar::mousePressEvent(QMouseEvent *event)
     if (Qt::LeftButton == event->button())
     {
         m_bMouseLeftDonw = true;
-        m_MousePosition = event->pos();// - frameGeometry().topLeft();
+        m_MousePosition = event->position().toPoint(); // 记录鼠标在标题栏中的相对位置
     }
 }
 

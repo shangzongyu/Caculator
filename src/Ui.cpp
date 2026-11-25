@@ -37,7 +37,7 @@ Ui::~Ui()
 void Ui::init()
 {
     setWindowFlags(Qt::FramelessWindowHint); // 去掉窗体的边框
-    setWindowIcon(QIcon("./image/1.png")); // 设置状态栏图片
+    setWindowIcon(QIcon(":/image/1.png")); // 设置状态栏图片
     setFixedSize(324, 576); // 设置窗体大小
 
     m_titleBar.setFixedSize(324, 20); // 设置可拖拽区域大小
@@ -98,7 +98,7 @@ void Ui::init()
 
     m_bWaitForOprate = true;
 
-    m_leftOperate  = 0.0; // 左操作数设置默认值
+    m_leftOperate = QStringLiteral("0"); // 左操作数设置默认值
 
     m_eType = EAlgorithmType_Unkonw; // 算法类型设置为未知
 }
@@ -118,7 +118,7 @@ void Ui::layout()
     QGridLayout *pGridLayout = new QGridLayout; // 创建网格布局
     Q_CHECK_PTR(pGridLayout);
 
-    pGridLayout->setMargin(0);
+    pGridLayout->setContentsMargins(0, 0, 0, 0);
 
     // 第一行,把清除按按钮和删除按钮加到网格布局里
     pGridLayout->addWidget(&m_clearButton, 0, 0, 1, 3);
@@ -149,7 +149,6 @@ void Ui::layout()
     pGridLayout->addWidget(&m_addButton,     4, 3, 1, 1);
 
     pGridLayout->setContentsMargins(2,2,2,2);
-    pGridLayout->setMargin(2);
     pGridLayout->setSpacing(2);
 
     QFrame *pGrindFrame = new QFrame(this); // 创建网格窗体(因为布局一定要放到widget才行)
@@ -325,7 +324,7 @@ void Ui::clearButtonClicked()
 {
     m_eType = EAlgorithmType_Unkonw; // 重置算法类型
     m_display.setText("0"); // 重置文本内容
-    m_leftOperate  = 0.0; // 重置左操作数
+    m_leftOperate = QStringLiteral("0"); // 重置左操作数
     m_bWaitForOprate = true; // 重置标志位
 }
 

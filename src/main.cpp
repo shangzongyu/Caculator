@@ -3,7 +3,6 @@
 #include <QDir>
 #include <QFile>
 #include <QDebug>
-#include <QTextCodec>
 #include "Ui.h"
 
 int main(int argc, char *argv[])
@@ -11,10 +10,7 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
     QApplication::addLibraryPath("./plugins");
 
-    // 以下部分解决中文乱码
-    QTextCodec::setCodecForLocale(QTextCodec::codecForName("GB2312"));
-    // 以上部分解决中文乱码
-
+    // 中文文本使用 UTF-8，Qt 6 会按 UTF-8 读取字符串，无需设置 GB2312 来解决中文乱码。
     QFile file(":my.qss");
     if (file.open(QFile::ReadOnly))
     {
