@@ -42,3 +42,32 @@ func TestKeypadAndKeyboardShareState(t *testing.T) {
 		t.Fatalf("after click on equals, display = %s, visible text = %q", calc.Display(), window.Texts())
 	}
 }
+
+func TestResizeDuringCalculation(t *testing.T) {
+	var calc Calculator
+	window := ui.NewTester(calc.view, windowWidth, windowHeight)
+	window.Type("12+")
+	window.SetSize(720, 640)
+	large, ok := window.Find("等于")
+	if !ok {
+		t.Fatal("missing equals key after enlarging window")
+	}
+	if err := window.Click("3"); err != nil {
+		t.Fatal(err)
+	}
+
+	window.SetSize(minWindowWidth, minWindowHeight)
+	small, ok := window.Find("等于")
+	if !ok || small.W >= large.W || small.H >= large.H {
+		t.Fatalf("equals key did not resize: large %+v, small %+v", large, small)
+	}
+	if err := window.Click("4"); err != nil {
+		t.Fatal(err)
+	}
+	if err := window.Click("等于"); err != nil {
+		t.Fatal(err)
+	}
+	if got := calc.Display(); got != "46" || !window.HasText("46") {
+		t.Fatalf("after resizing, display = %q, want 46", got)
+	}
+}

@@ -1,0 +1,22 @@
+[tools]
+go = "1.27.4"
+
+[tasks.start]
+description = "启动计算器"
+run = "go run ."
+
+[tasks.dev]
+description = "启动 MyGo 热重载开发环境"
+run = "go tool mygo dev"
+
+[tasks.test]
+description = "运行单元和界面测试"
+run = "go test ./..."
+
+[tasks.vet]
+description = "运行 Go 静态检查"
+run = "go vet ./..."
+
+[tasks.build]
+description = "为当前平台打包应用"
+run = "go tool mygo build"

@@ -1,16 +1,28 @@
 # Caculator
 
-使用 Go 和 MyGo 原生 UI 编写的桌面计算器。保留 Qt 版的键位布局和逐步计算方式，顶部显示当前输入以及待执行的运算。
+使用 Go 和 MyGo 原生 UI 编写的桌面计算器。保留 Qt 版的键位布局和逐步计算方式，顶部显示当前输入以及待执行的运算。窗口可拖动边缘调整大小，也可最大化，键盘和显示区会随之调整。
 
-## 运行
+## 开发与运行
 
-安装 Go 1.27.3 或更高版本，在项目根目录运行：
+先安装 [mise](https://mise.jdx.dev/getting-started.html)，然后在项目根目录执行：
 
 ```sh
-go run .
+mise trust
+mise install
+mise run start
 ```
 
-开发时可用 `go tool mygo dev` 启用热重载。MyGo 及其命令行工具的版本由 go.mod 固定。
+mise.toml 固定项目使用的 Go 版本。MyGo 和它的命令行工具由 Go 模块管理，首次运行会自动下载。
+
+| 命令 | 用途 |
+| --- | --- |
+| `mise run start` | 启动计算器 |
+| `mise run dev` | 启动应用并监听源码变化，保存后热重载 |
+| `mise run test` | 运行计算逻辑和界面测试 |
+| `mise run vet` | 运行 Go 静态检查 |
+| `mise run build` | 为当前平台打包，产物位于 `build/` |
+
+macOS 打包会生成应用和 DMG。Apple Silicon 上可用 `open build/darwin-arm64/计算器.app` 打开构建产物。
 
 ## 按键
 
@@ -23,13 +35,3 @@ go run .
 | 清空 | `Esc` |
 
 连续运算按输入顺序执行，例如 `2 + 3 × 4 =` 得到 `20`。连续按两个运算符时采用后一个。除以零时显示 `Error`，直接输入数字或小数点即可重新开始。
-
-## 测试与 macOS 打包
-
-```sh
-go test ./...
-go tool mygo build -skip-dmg
-open "build/darwin-$(go env GOARCH)/计算器.app"
-```
-
-运行 `go tool mygo build` 可同时生成磁盘映像。

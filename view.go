@@ -25,26 +25,34 @@ func keyFace(key rune) string {
 }
 
 func (calc *Calculator) view(c *ui.Context) {
-	ui.Column(c).Fill().Padding(16).Gap(14).Background(paper).
+	const padding = 16
+	width, height := c.Size()
+	scale := min(width/windowWidth, height/windowHeight, 1.6)
+	ui.Column(c).Fill().Padding(padding).Gap(14).Background(paper).
 		Focusable().AutoFocus().TextCaret(ui.Rect{}).InputMethod(false).HandleInput(calc.keyboard).Children(func() {
-		ui.Column(c).Height(114).Padding(12, 16).Radius(12).Justify(ui.End).Background(ink).Children(func() {
+		ui.Column(c).Height(114*scale).Padding(8, padding).Radius(12).Justify(ui.End).Background(ink).Children(func() {
 			if calc.operator != 0 {
 				ui.Text(c, formatResult(calc.accumulator)+" "+keyFace(calc.operator)).
 					TextAlign(ui.End).FontSize(15).TextColor(sage)
 			}
 			result := calc.Display()
-			size := min(float32(48), 450/float32(len(result)))
+			size := 48 * scale
+			textWidth, _ := c.MeasureText(0, ui.Span{Text: result, Size: size})
+			available := width - 4*padding // Outer margins and display padding on both sides.
+			if textWidth > available && available > 0 {
+				size *= available / textWidth
+			}
 			ui.Text(c, result).SingleLine().TextAlign(ui.End).FontSize(size).TextColor(ivory).Role(ui.RoleStatus)
 		})
 		ui.Grid(c).Columns(4).GridRows(5).Grow(1).Gap(7).Children(func() {
 			for _, key := range keyOrder {
-				calc.button(c, key)
+				calc.button(c, key, scale)
 			}
 		})
 	})
 }
 
-func (calc *Calculator) button(c *ui.Context, key rune) {
+func (calc *Calculator) button(c *ui.Context, key rune, scale float32) {
 	face := keyFace(key)
 	button := ui.ButtonBase(c.Key(string(key))).Center().Radius(10).TextCaret(ui.Rect{}).InputMethod(false).HandleInput(calc.keyboard)
 	name := keyNames[key]
@@ -69,7 +77,7 @@ func (calc *Calculator) button(c *ui.Context, key rune) {
 		color = color.Mix(ink, 0.08)
 	}
 	button.Background(color).Border(1, ink.Mix(color, 0.82)).Children(func() {
-		ui.Text(c, face).FontSize(size).TextColor(ink)
+		ui.Text(c, face).FontSize(size * scale).TextColor(ink)
 	})
 	if button.Clicked() {
 		calc.Press(key)

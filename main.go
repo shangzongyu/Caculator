@@ -8,8 +8,10 @@ import (
 )
 
 const (
-	windowWidth  = 360
-	windowHeight = 492
+	windowWidth     = 360
+	windowHeight    = 492
+	minWindowWidth  = 240
+	minWindowHeight = 320
 )
 
 func main() {
@@ -17,7 +19,7 @@ func main() {
 	mygo.App.WhenReady(func() {
 		mygo.NewWindow(mygo.WindowOptions{
 			Title: "计算器", Width: windowWidth, Height: windowHeight,
-			UseContentSize: true, DisableResize: true, DisableMaximize: true,
+			MinWidth: minWindowWidth, MinHeight: minWindowHeight, UseContentSize: true,
 			Content: ui.View(calc.view),
 		})
 	})
