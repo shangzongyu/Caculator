@@ -71,3 +71,34 @@ func TestResizeDuringCalculation(t *testing.T) {
 		t.Fatalf("after resizing, display = %q, want 46", got)
 	}
 }
+
+func TestLongNumbersFitAcrossWindowShapes(t *testing.T) {
+	var calc Calculator
+	window := ui.NewTester(calc.view, windowWidth, windowHeight)
+	const entry = "9876543210987654321"
+	window.Type("1234567890123456789+" + entry)
+	pending := formatResult(calc.accumulator) + " +"
+
+	for _, size := range [][2]int{{240, 320}, {240, 720}, {720, 320}} {
+		window.SetSize(size[0], size[1])
+		hint, hintOK := window.Find(pending)
+		result, resultOK := window.Find(entry)
+		clear, clearOK := window.Find("清空")
+		backspace, backspaceOK := window.Find("退格")
+
+		if !hintOK || !resultOK || !clearOK || !backspaceOK {
+			t.Fatalf("at %v, missing text or keys: %q", size, window.Texts())
+		}
+		for _, rect := range []ui.Rect{hint, result, clear, backspace} {
+			if rect.W <= 0 || rect.H <= 0 || rect.X < 0 || rect.Y < 0 ||
+				rect.X+rect.W > float32(size[0]) || rect.Y+rect.H > float32(size[1]) {
+				t.Fatalf("at %v, element outside window: %+v", size, rect)
+			}
+		}
+		const rounding = 1 // DIP
+		if hint.Y+hint.H > result.Y+rounding || result.Y+result.H > clear.Y+rounding ||
+			clear.Y != backspace.Y || clear.X+clear.W > backspace.X || clear.W <= backspace.W {
+			t.Fatalf("at %v, unexpected placement: hint %+v, result %+v, clear %+v, backspace %+v", size, hint, result, clear, backspace)
+		}
+	}
+}

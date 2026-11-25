@@ -6,15 +6,26 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
+const (
+	clearKey     = '\x1b'
+	backspaceKey = '\b'
+)
+
 var (
-	paper    = ui.Hex("#efede5")
-	ink      = ui.Hex("#1e3430")
-	ivory    = ui.Hex("#fffef8")
-	sage     = ui.Hex("#d1dfd5")
-	amber    = ui.Hex("#ffbc70")
-	keyOrder = []rune("\x1b\b789/456*123-.0=+")
-	keyNames = map[rune]string{'\x1b': "清空", '\b': "退格", '+': "加", '-': "减", '*': "乘", '/': "除", '=': "等于", '.': "小数点"}
-	keyFaces = map[rune]string{'\x1b': "清空", '\b': "⌫", '-': "−", '*': "×", '/': "÷"}
+	paper = ui.Hex("#efede5")
+	ink   = ui.Hex("#1e3430")
+	ivory = ui.Hex("#fffef8")
+	sage  = ui.Hex("#d1dfd5")
+	amber = ui.Hex("#ffbc70")
+
+	keypadRows = [...]string{
+		"789/",
+		"456*",
+		"123-",
+		".0=+",
+	}
+	keyNames = map[rune]string{clearKey: "清空", backspaceKey: "退格", '+': "加", '-': "减", '*': "乘", '/': "除", '=': "等于", '.': "小数点"}
+	keyFaces = map[rune]string{clearKey: "清空", backspaceKey: "⌫", '-': "−", '*': "×", '/': "÷"}
 )
 
 func keyFace(key rune) string {
@@ -25,34 +36,50 @@ func keyFace(key rune) string {
 }
 
 func (calc *Calculator) view(c *ui.Context) {
-	const padding = 16
 	width, height := c.Size()
 	scale := min(width/windowWidth, height/windowHeight, 1.6)
-	ui.Column(c).Fill().Padding(padding).Gap(14).Background(paper).
+	spacing := min(scale, 1)
+	padding := 16 * spacing
+	ui.Column(c).Fill().Padding(padding).Gap(14 * spacing).Background(paper).
 		Focusable().AutoFocus().TextCaret(ui.Rect{}).InputMethod(false).HandleInput(calc.keyboard).Children(func() {
-		ui.Column(c).Height(114*scale).Padding(8, padding).Radius(12).Justify(ui.End).Background(ink).Children(func() {
-			if calc.operator != 0 {
-				ui.Text(c, formatResult(calc.accumulator)+" "+keyFace(calc.operator)).
-					TextAlign(ui.End).FontSize(15).TextColor(sage)
-			}
-			result := calc.Display()
-			size := 48 * scale
-			textWidth, _ := c.MeasureText(0, ui.Span{Text: result, Size: size})
-			available := width - 4*padding // Outer margins and display padding on both sides.
-			if textWidth > available && available > 0 {
-				size *= available / textWidth
-			}
-			ui.Text(c, result).SingleLine().TextAlign(ui.End).FontSize(size).TextColor(ivory).Role(ui.RoleStatus)
-		})
-		ui.Grid(c).Columns(4).GridRows(5).Grow(1).Gap(7).Children(func() {
-			for _, key := range keyOrder {
-				calc.button(c, key, scale)
-			}
-		})
+		calc.display(c, scale, padding)
+		calc.keypad(c, scale, 7*spacing)
 	})
 }
 
-func (calc *Calculator) button(c *ui.Context, key rune, scale float32) {
+func (calc *Calculator) display(c *ui.Context, scale, padding float32) {
+	width, _ := c.Size()
+	available := width - 4*padding // Outer margins and display padding on both sides.
+	ui.Column(c).Height(114*scale).Padding(padding/2, padding).Radius(12).Justify(ui.End).Background(ink).Children(func() {
+		if calc.operator != 0 {
+			pending := formatResult(calc.accumulator) + " " + keyFace(calc.operator)
+			displayLine(c, pending, 15*scale, available).TextColor(sage)
+		}
+		displayLine(c, calc.Display(), 48*scale, available).TextColor(ivory).Role(ui.RoleStatus)
+	})
+}
+
+func displayLine(c *ui.Context, text string, size, available float32) ui.Element {
+	textWidth, _ := c.MeasureText(0, ui.Span{Text: text, Size: size})
+	if available > 0 && textWidth > available {
+		size *= available / textWidth
+	}
+	return ui.Text(c, text).SingleLine().TextAlign(ui.End).FontSize(size)
+}
+
+func (calc *Calculator) keypad(c *ui.Context, scale, gap float32) {
+	ui.Grid(c).Columns(4).GridRows(1 + len(keypadRows)).Grow(1).Gap(gap).Children(func() {
+		calc.button(c, clearKey, scale).ColumnSpan(3)
+		calc.button(c, backspaceKey, scale)
+		for _, row := range keypadRows {
+			for _, key := range row {
+				calc.button(c, key, scale)
+			}
+		}
+	})
+}
+
+func (calc *Calculator) button(c *ui.Context, key rune, scale float32) ui.Element {
 	face := keyFace(key)
 	button := ui.ButtonBase(c.Key(string(key))).Center().Radius(10).TextCaret(ui.Rect{}).InputMethod(false).HandleInput(calc.keyboard)
 	name := keyNames[key]
@@ -63,10 +90,9 @@ func (calc *Calculator) button(c *ui.Context, key rune, scale float32) {
 
 	color, size := ivory, float32(25)
 	switch {
-	case key == '\x1b':
-		button.ColumnSpan(3)
+	case key == clearKey:
 		color, size = sage, 17
-	case key == '\b' || strings.ContainsRune("+-*/", key):
+	case key == backspaceKey || strings.ContainsRune("+-*/", key):
 		color = sage
 	case key == '=':
 		color = amber
@@ -82,6 +108,7 @@ func (calc *Calculator) button(c *ui.Context, key rune, scale float32) {
 	if button.Clicked() {
 		calc.Press(key)
 	}
+	return button
 }
 
 func (calc *Calculator) keyboard(event ui.InputEvent) bool {
@@ -104,9 +131,9 @@ func (calc *Calculator) keyboard(event ui.InputEvent) bool {
 		case ui.KeyEnter:
 			calc.Press('=')
 		case ui.KeyEscape:
-			calc.Press('\x1b')
+			calc.Press(clearKey)
 		case ui.KeyBackspace:
-			calc.Press('\b')
+			calc.Press(backspaceKey)
 		default:
 			return false
 		}
