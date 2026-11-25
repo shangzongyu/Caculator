@@ -111,7 +111,10 @@ func TestSwitchAppearanceDuringCalculation(t *testing.T) {
 	window.Type("12+")
 	previous := window.Image().At(0, minWindowHeight-1)
 	messages := locales.In("zh-Hans")
-	menu := app.appearanceMenu(messages, window.Frame)
+	menu := app.appearanceMenu(messages, func(index int) {
+		app.appearance = index
+		window.Frame()
+	})
 	if window.HasText(menu.Label) {
 		t.Fatal("the appearance menu is still visible inside the calculator")
 	}
@@ -168,7 +171,7 @@ func TestSwitchLanguageDuringCalculation(t *testing.T) {
 	if menu.Label != "Language" || menu.Submenu[0].IsChecked() || !menu.Submenu[1].IsChecked() {
 		t.Fatal("language menu did not mark English as selected")
 	}
-	appearance := app.appearanceMenu(locales.In("en"), window.Frame)
+	appearance := app.appearanceMenu(locales.In("en"), func(int) {})
 	if appearance.Label != "Appearance" || appearance.Submenu[1].Label != "Graphite" {
 		t.Fatal("appearance menu did not switch to English")
 	}

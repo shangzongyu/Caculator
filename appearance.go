@@ -2,15 +2,19 @@ package main
 
 import (
 	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/plugins/preferences"
 	"github.com/egoist/mygo/ui"
 	"github.com/shangzongyu/Caculator/locales"
 )
+
+const appearancePreference = "appearance"
 
 type keyColors struct {
 	top, bottom, edge, text ui.Color
 }
 
 type appearance struct {
+	id                          string
 	name                        func(locales.Messages) string
 	chassisTop, chassisBottom   ui.Color
 	screenTop, screenBottom     ui.Color
@@ -21,9 +25,10 @@ type appearance struct {
 	digits, actions, equals     keyColors
 }
 
-// Warm sand is first so a new window starts with the original appearance.
+// Warm sand is the default. Persist the ID so reordering or translating the menu is safe.
 var appearances = [...]appearance{
 	{
+		id:         "warm-sand",
 		name:       locales.Messages.AppearanceWarmSand,
 		chassisTop: ui.Hex("#f4efe6"), chassisBottom: ui.Hex("#e4dbcc"),
 		screenTop: ui.Hex("#252a26"), screenBottom: ui.Hex("#373e34"),
@@ -36,6 +41,7 @@ var appearances = [...]appearance{
 		equals:  newKeyColors("#ac5035", "#8c3b26", "#763322", "#fff6e9"),
 	},
 	{
+		id:         "graphite",
 		name:       locales.Messages.AppearanceGraphite,
 		chassisTop: ui.Hex("#30343a"), chassisBottom: ui.Hex("#1b1e22"),
 		screenTop: ui.Hex("#101820"), screenBottom: ui.Hex("#1b2b34"),
@@ -48,6 +54,7 @@ var appearances = [...]appearance{
 		equals:  newKeyColors("#9bdee7", "#68b6c6", "#4e93a4", "#0f2930"),
 	},
 	{
+		id:         "porcelain",
 		name:       locales.Messages.AppearancePorcelain,
 		chassisTop: ui.Hex("#f8fbff"), chassisBottom: ui.Hex("#dce7f2"),
 		screenTop: ui.Hex("#dbe7f2"), screenBottom: ui.Hex("#edf5fc"),
@@ -65,17 +72,31 @@ func newKeyColors(top, bottom, edge, text string) keyColors {
 	return keyColors{top: ui.Hex(top), bottom: ui.Hex(bottom), edge: ui.Hex(edge), text: ui.Hex(text)}
 }
 
-func (app *calculatorView) appearanceMenu(messages locales.Messages, redraw func()) *mygo.MenuItem {
+func savedAppearance() int {
+	var id string
+	if preferences.Get(appearancePreference, &id) {
+		for index, style := range appearances {
+			if style.id == id {
+				return index
+			}
+		}
+	}
+	return 0
+}
+
+func (app *calculatorView) selectAppearance(index int) error {
+	app.appearance = index
+	return preferences.Set(appearancePreference, appearances[index].id)
+}
+
+func (app *calculatorView) appearanceMenu(messages locales.Messages, selectAppearance func(int)) *mygo.MenuItem {
 	items := make([]*mygo.MenuItem, 0, len(appearances))
 	for index := range appearances {
 		items = append(items, &mygo.MenuItem{
 			Label:   appearances[index].name(messages),
 			Type:    mygo.MenuItemRadio,
 			Checked: index == app.appearance,
-			Click: func(*mygo.MenuItem, *mygo.Window) {
-				app.appearance = index
-				redraw()
-			},
+			Click:   func(*mygo.MenuItem, *mygo.Window) { selectAppearance(index) },
 		})
 	}
 	return &mygo.MenuItem{Label: messages.AppearanceMenu(), Submenu: items}

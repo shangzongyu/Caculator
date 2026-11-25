@@ -7,7 +7,7 @@ import (
 	"github.com/shangzongyu/Caculator/locales"
 )
 
-func (app *calculatorView) menu(locale string, redraw func()) *mygo.Menu {
+func (app *calculatorView) menu(locale string, selectAppearance func(int)) *mygo.Menu {
 	var items []*mygo.MenuItem
 	if runtime.GOOS == "darwin" {
 		// Keep MyGo's standard roles and their localized labels and shortcuts.
@@ -19,7 +19,7 @@ func (app *calculatorView) menu(locale string, redraw func()) *mygo.Menu {
 			{Role: mygo.RoleWindowMenu},
 		}
 	}
-	items = append(items, app.appearanceMenu(locales.In(locale), redraw), languageMenu(locale, mygo.App.SetLocale))
+	items = append(items, app.appearanceMenu(locales.In(locale), selectAppearance), languageMenu(locale, mygo.App.SetLocale))
 	return mygo.NewMenu(items)
 }
 
