@@ -77,7 +77,7 @@ func TestLongNumbersFitAcrossWindowShapes(t *testing.T) {
 	window := ui.NewTester(calc.view, windowWidth, windowHeight)
 	const entry = "9876543210987654321"
 	window.Type("1234567890123456789+" + entry)
-	pending := formatResult(calc.accumulator) + " +"
+	const pending = "1234567890123456789 +"
 
 	for _, size := range [][2]int{{240, 320}, {240, 720}, {720, 320}} {
 		window.SetSize(size[0], size[1])

@@ -1,8 +1,7 @@
 package main
 
 import (
-	"math"
-	"strconv"
+	"math/big"
 	"strings"
 )
 
@@ -12,6 +11,7 @@ const (
 	operatorKeys = "+-*/"
 
 	maxEntryLength          = 19 // Includes the decimal point.
+	maxPlainResultLength    = 24
 	resultSignificantDigits = 15
 )
 
@@ -29,7 +29,7 @@ type Calculator struct {
 	entry       string
 	state       entryState
 	operator    rune
-	accumulator float64
+	accumulator *big.Rat
 }
 
 func (c *Calculator) Display() string {
@@ -82,20 +82,20 @@ func (c *Calculator) Press(key rune) {
 
 // commit records the first operand or applies the pending operation to the current entry.
 func (c *Calculator) commit() bool {
-	value, err := strconv.ParseFloat(c.Display(), 64)
-	switch c.operator {
-	case '+':
-		value = c.accumulator + value
-	case '-':
-		value = c.accumulator - value
-	case '*':
-		value = c.accumulator * value
-	case '/':
-		value = c.accumulator / value
-	}
-	if err != nil || math.IsInf(value, 0) || math.IsNaN(value) {
+	value, ok := new(big.Rat).SetString(c.Display())
+	if !ok || (c.operator == '/' && value.Sign() == 0) {
 		*c = Calculator{entry: "Error", state: showingError}
 		return false
+	}
+	switch c.operator {
+	case '+':
+		value.Add(c.accumulator, value)
+	case '-':
+		value.Sub(c.accumulator, value)
+	case '*':
+		value.Mul(c.accumulator, value)
+	case '/':
+		value.Quo(c.accumulator, value)
 	}
 	c.accumulator = value // Chained operations use the value before display rounding.
 	if c.operator != 0 {
@@ -104,9 +104,14 @@ func (c *Calculator) commit() bool {
 	return true
 }
 
-func formatResult(value float64) string {
-	if value == 0 { // Display both positive and negative zero as 0.
-		return "0"
+func formatResult(value *big.Rat) string {
+	fractionDigits, exact := value.FloatPrec()
+	if exact && fractionDigits < maxPlainResultLength {
+		text := value.FloatString(fractionDigits)
+		if len(text) <= maxPlainResultLength {
+			return text
+		}
 	}
-	return strconv.FormatFloat(value, 'g', resultSignificantDigits, 64)
+	// Keep repeating decimals and long results readable on the display.
+	return new(big.Float).SetRat(value).Text('g', resultSignificantDigits)
 }
