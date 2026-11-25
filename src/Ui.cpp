@@ -3,6 +3,7 @@
 #include "AlgorithmContext.h"
 
 #include <QGridLayout>
+#include <QShortcut>
 #include <cmath>
 
 namespace {
@@ -22,6 +23,7 @@ Ui::Ui(QWidget *parent) :
 {
     init();
     layout();
+    initShortcuts();
 }
 
 /*******************************************************************************
@@ -34,12 +36,14 @@ Ui::Ui(QWidget *parent) :
 void Ui::init()
 {
     setWindowFlags(Qt::FramelessWindowHint); // 去掉窗体的边框
+    setWindowTitle(tr("计算器"));
     setWindowIcon(QIcon(":/image/1.png")); // 设置状态栏图片
     setFixedSize(324, 576); // 设置窗体大小
 
     m_titleBar.setFixedSize(324, 20); // 设置可拖拽区域大小
     m_titleBar.setObjectName("titleBar_Label"); // 设置可拖拽区域类名
     m_titleBar.setParent(this); // 设置可拖拽区域父窗体
+    initWindowControls();
 
     // 初始化数字按钮
     QString strNum = "";
@@ -148,6 +152,47 @@ void Ui::layout()
     pGrindFrame->setObjectName("bg"); // 设置网格窗体的类名
     pGrindFrame->setLayout(pGridLayout); // 设置布局(把布局加到widget)
     pGrindFrame->move(0, 110);
+}
+
+void Ui::initWindowControls()
+{
+    auto *closeButton = new QPushButton(QStringLiteral("×"), &m_titleBar);
+    closeButton->setObjectName("window_close");
+    closeButton->setAccessibleName(tr("关闭窗口"));
+    closeButton->setToolTip(closeButton->accessibleName());
+    closeButton->setFixedSize(18, 18);
+    closeButton->move(4, 1);
+    connect(closeButton, &QPushButton::clicked, this, &QWidget::close);
+
+    auto *minimizeButton = new QPushButton(QStringLiteral("−"), &m_titleBar);
+    minimizeButton->setObjectName("window_minimize");
+    minimizeButton->setAccessibleName(tr("最小化窗口"));
+    minimizeButton->setToolTip(minimizeButton->accessibleName());
+    minimizeButton->setFixedSize(18, 18);
+    minimizeButton->move(26, 1);
+    connect(minimizeButton, &QPushButton::clicked, this, &QWidget::showMinimized);
+}
+
+void Ui::initShortcuts()
+{
+    auto bind = [this](const QKeySequence &key, QAbstractButton *button) {
+        auto *shortcut = new QShortcut(key, this);
+        connect(shortcut, &QShortcut::activated, button, &QAbstractButton::click);
+    };
+
+    for (int digit = 0; digit < 10; ++digit)
+        bind(QKeySequence(Qt::Key_0 + digit), &m_numButtons[digit]);
+
+    bind(QKeySequence(Qt::Key_Plus), &m_addButton);
+    bind(QKeySequence(Qt::Key_Minus), &m_subButton);
+    bind(QKeySequence(Qt::Key_Asterisk), &m_mulButton);
+    bind(QKeySequence(Qt::Key_Slash), &m_divButton);
+    bind(QKeySequence(Qt::Key_Period), &m_dotButton);
+    bind(QKeySequence(Qt::Key_Equal), &m_equalButton);
+    bind(QKeySequence(Qt::Key_Return), &m_equalButton);
+    bind(QKeySequence(Qt::Key_Enter), &m_equalButton);
+    bind(QKeySequence(Qt::Key_Backspace), &m_delButton);
+    bind(QKeySequence(Qt::Key_Escape), &m_clearButton);
 }
 
 void Ui::startEntry()

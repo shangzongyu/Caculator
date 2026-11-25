@@ -22,6 +22,8 @@ public:
 private:
     void init();
     void layout();
+    void initShortcuts();
+    void initWindowControls();
     void selectOperator(EAlgorithmType operation);
     bool commitOperand();
     void startEntry();

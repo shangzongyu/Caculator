@@ -6,6 +6,24 @@
     border-image: url(:/image/titleBar.png);
 }
 
+QPushButton#window_close, QPushButton#window_minimize {
+    color: white;
+    background-color: #303030;
+    border: 1px solid #626262;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+QPushButton#window_close:hover, QPushButton#window_minimize:hover,
+QPushButton#window_close:focus, QPushButton#window_minimize:focus {
+    background-color: #565656;
+    border-color: #b0b0b0;
+}
+
+QPushButton#window_close:pressed, QPushButton#window_minimize:pressed {
+    background-color: #202020;
+}
+
 *#result_Lable{
     font-size : 30px;
     font-family : "微软雅黑";
