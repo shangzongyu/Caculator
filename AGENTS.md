@@ -14,6 +14,7 @@ Caculator 是用 Go 和 MyGo 原生 UI 实现的桌面计算器。应用、计�
 | `mise run lint` | 检查 Go 代码和格式 |
 | `mise run vet` | 运行 Go 静态检查 |
 | `mise run test` | 运行计算逻辑与界面测试 |
+| `mise run generate` | 根据多语言词条生成 Go 访问器 |
 | `mise run build` | 为当前平台打包，产物位于 `build/` |
 
 修改 Go 源码后运行 `fmt`、`lint` 和 `test`。涉及窗口启动或打包的改动再运行 `build`。
@@ -21,9 +22,10 @@ Caculator 是用 Go 和 MyGo 原生 UI 实现的桌面计算器。应用、计�
 ## 代码入口和行为
 
 - [calculator.go](calculator.go) 管理逐位输入和运算状态。`entry` 保留 `0.`、`12.00` 等编辑状态，内部累加器用 `math/big.Rat` 保存精确值。链式计算直接使用累加器，循环小数和过长结果只在显示时舍入。
-- 连续运算按输入顺序进行，`2 + 3 × 4 =` 得到 `20`。等待下一操作数时再按运算符会替换上一个，连续按 `=` 会保留当前结果。除以零时显示 `Error`，可以用数字或小数点开始下一次输入。
+- 连续运算按输入顺序进行，`2 + 3 × 4 =` 得到 `20`。等待下一操作数时再按运算符会替换上一个，连续按 `=` 会保留当前结果。除以零时显示对应语言的错误提示，可以用数字或小数点开始下一次输入。
 - [view.go](view.go) 构建显示区和键盘。屏幕按钮和物理键盘通过 `Calculator.Press` 调用同一套输入逻辑。
 - [main.go](main.go) 创建可缩放的窗口。布局变更应检查最小窗口、窄高及宽矮窗口中的长数字、待运算提示和按键。
+- [menu.go](menu.go) 构建系统菜单。界面词条分别放在 [简体中文](locales/zh-Hans.json) 和 [English](locales/en.json) 的目录文件中。改完词条后运行 `mise run generate`，并一起提交生成的 Go 源码。
 - 计算行为变更用 [calculator_test.go](calculator_test.go) 中的按键序列验证。键鼠交互和缩放使用 [view_test.go](view_test.go) 中的 MyGo `ui.NewTester`。
 
 ## 代码风格

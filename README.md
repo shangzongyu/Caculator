@@ -19,6 +19,7 @@ mise.toml 固定项目使用的 Go 和 golangci-lint 版本。MyGo 和它的命�
 | `mise run start` | 启动计算器 |
 | `mise run dev` | 启动应用并监听源码变化，保存后热重载 |
 | `mise run test` | 运行计算逻辑和界面测试 |
+| `mise run generate` | 根据多语言词条生成 Go 访问器 |
 | `mise run fmt` | 写入 `modernize` 的自动修复，并用 `gofmt` 格式化 Go 源码 |
 | `mise run lint` | 运行 golangci-lint，检查代码和 Go 格式 |
 | `mise run vet` | 运行 Go 静态检查 |
@@ -30,6 +31,8 @@ macOS 打包会生成应用和 DMG。Apple Silicon 上可用 `open build/darwin-
 
 打开系统菜单栏的「外观」，可在暖砂、石墨和瓷白之间切换。当前样式带有选中标记，切换时会保留当前算式。
 
+打开系统菜单栏的「语言」或「Language」，可在简体中文和 English 之间切换。首次启动匹配系统首选语言，手动选择会在下次启动时保留。
+
 | 操作 | 键盘 |
 | --- | --- |
 | 输入数字或小数点 | `0`–`9`、`.` |
@@ -38,6 +41,6 @@ macOS 打包会生成应用和 DMG。Apple Silicon 上可用 `open build/darwin-
 | 删除最后一位 | `Backspace` |
 | 清空 | `Esc` |
 
-连续运算按输入顺序执行，例如 `2 + 3 × 4 =` 得到 `20`。连续按两个运算符时采用后一个。除以零时显示 `Error`，直接输入数字或小数点即可重新开始。
+连续运算按输入顺序执行，例如 `2 + 3 × 4 =` 得到 `20`。连续按两个运算符时采用后一个。除以零时显示「错误」或 `Error`，直接输入数字或小数点即可重新开始。
 
 计算使用精确分数。循环小数和过长的结果最多显示 15 位有效数字，继续运算时仍使用精确值。
