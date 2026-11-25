@@ -5,6 +5,7 @@ import (
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
+	"github.com/shangzongyu/Caculator/locales"
 )
 
 func TestKeypadAndKeyboardShareState(t *testing.T) {
@@ -109,7 +110,8 @@ func TestSwitchAppearanceDuringCalculation(t *testing.T) {
 	window := ui.NewTester(app.view, minWindowWidth, minWindowHeight)
 	window.Type("12+")
 	previous := window.Image().At(0, minWindowHeight-1)
-	menu := app.appearanceMenu(window.Frame)
+	messages := locales.In("zh-Hans")
+	menu := app.appearanceMenu(messages, window.Frame)
 	if window.HasText(menu.Label) {
 		t.Fatal("the appearance menu is still visible inside the calculator")
 	}
@@ -127,7 +129,7 @@ func TestSwitchAppearanceDuringCalculation(t *testing.T) {
 		item := menu.Submenu[index]
 		name := want[index]
 		item.Click(item, nil)
-		if selected := appearances[app.appearance].name; selected != name {
+		if selected := appearances[app.appearance].name(messages); selected != name {
 			t.Fatalf("appearance = %q, want %q", selected, name)
 		}
 		current := window.Image().At(0, minWindowHeight-1)
@@ -144,5 +146,46 @@ func TestSwitchAppearanceDuringCalculation(t *testing.T) {
 	window.Key(0, ui.KeyEnter)
 	if got := app.calc.Display(); got != "15" || !window.HasText("15") {
 		t.Fatalf("after switching appearances, display = %q, want 15", got)
+	}
+}
+
+func TestSwitchLanguageDuringCalculation(t *testing.T) {
+	var app calculatorView
+	window := ui.NewTester(app.view, minWindowWidth, minWindowHeight)
+	window.SetLocale("zh-Hans")
+	window.Type("12+3")
+
+	menu := languageMenu("zh-Hans", window.SetLocale)
+	if menu.Label != "语言" || !menu.Submenu[0].IsChecked() || menu.Submenu[1].IsChecked() {
+		t.Fatal("language menu did not mark Simplified Chinese as selected")
+	}
+	english := menu.Submenu[1]
+	english.Click(english, nil)
+	if !window.HasText("Clear") || window.HasText("清空") || !window.HasText("12 +") {
+		t.Fatalf("switching to English changed the calculation or left old labels: %q", window.Texts())
+	}
+	menu = languageMenu("en", window.SetLocale)
+	if menu.Label != "Language" || menu.Submenu[0].IsChecked() || !menu.Submenu[1].IsChecked() {
+		t.Fatal("language menu did not mark English as selected")
+	}
+	appearance := app.appearanceMenu(locales.In("en"), window.Frame)
+	if appearance.Label != "Appearance" || appearance.Submenu[1].Label != "Graphite" {
+		t.Fatal("appearance menu did not switch to English")
+	}
+	if err := window.Click("Equals"); err != nil {
+		t.Fatal(err)
+	}
+	if got := app.calc.Display(); got != "15" {
+		t.Fatalf("after switching languages, display = %q, want 15", got)
+	}
+
+	window.Type("1/0=")
+	if !window.HasText("Error") {
+		t.Fatalf("missing English error: %q", window.Texts())
+	}
+	chinese := menu.Submenu[0]
+	chinese.Click(chinese, nil)
+	if !window.HasText("错误") || window.HasText("Error") {
+		t.Fatalf("error did not switch to Chinese: %q", window.Texts())
 	}
 }

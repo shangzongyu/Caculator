@@ -14,6 +14,10 @@ run = "go tool mygo dev"
 description = "运行单元和界面测试"
 run = "go test ./..."
 
+[tasks.generate]
+description = "生成 MyGo 多语言访问器"
+run = "go tool mygo generate"
+
 [tasks.fmt]
 description = "应用 modernize 自动修复并格式化 Go 源码"
 run = [

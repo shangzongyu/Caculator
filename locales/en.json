@@ -1,0 +1,17 @@
+{
+  "windowTitle": "Calculator",
+  "languageMenu": "Language",
+  "appearanceMenu": "Appearance",
+  "appearanceWarmSand": "Warm Sand",
+  "appearanceGraphite": "Graphite",
+  "appearancePorcelain": "Porcelain",
+  "keyClear": "Clear",
+  "keyBackspace": "Backspace",
+  "keyAdd": "Add",
+  "keySubtract": "Subtract",
+  "keyMultiply": "Multiply",
+  "keyDivide": "Divide",
+  "keyEquals": "Equals",
+  "keyDecimalPoint": "Decimal point",
+  "calculationError": "Error"
+}

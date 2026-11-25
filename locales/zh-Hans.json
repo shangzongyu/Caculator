@@ -1,0 +1,17 @@
+{
+  "windowTitle": "计算器",
+  "languageMenu": "语言",
+  "appearanceMenu": "外观",
+  "appearanceWarmSand": "暖砂",
+  "appearanceGraphite": "石墨",
+  "appearancePorcelain": "瓷白",
+  "keyClear": "清空",
+  "keyBackspace": "退格",
+  "keyAdd": "加",
+  "keySubtract": "减",
+  "keyMultiply": "乘",
+  "keyDivide": "除",
+  "keyEquals": "等于",
+  "keyDecimalPoint": "小数点",
+  "calculationError": "错误"
+}

@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
+	"github.com/shangzongyu/Caculator/locales"
 )
 
 type keyColors struct {
@@ -10,7 +11,7 @@ type keyColors struct {
 }
 
 type appearance struct {
-	name                        string
+	name                        func(locales.Messages) string
 	chassisTop, chassisBottom   ui.Color
 	screenTop, screenBottom     ui.Color
 	screenEdge, screenText      ui.Color
@@ -23,7 +24,7 @@ type appearance struct {
 // Warm sand is first so a new window starts with the original appearance.
 var appearances = [...]appearance{
 	{
-		name:       "暖砂",
+		name:       locales.Messages.AppearanceWarmSand,
 		chassisTop: ui.Hex("#f4efe6"), chassisBottom: ui.Hex("#e4dbcc"),
 		screenTop: ui.Hex("#252a26"), screenBottom: ui.Hex("#373e34"),
 		screenEdge: ui.Hex("#20251f"), screenText: ui.Hex("#f3f5df"),
@@ -35,7 +36,7 @@ var appearances = [...]appearance{
 		equals:  newKeyColors("#ac5035", "#8c3b26", "#763322", "#fff6e9"),
 	},
 	{
-		name:       "石墨",
+		name:       locales.Messages.AppearanceGraphite,
 		chassisTop: ui.Hex("#30343a"), chassisBottom: ui.Hex("#1b1e22"),
 		screenTop: ui.Hex("#101820"), screenBottom: ui.Hex("#1b2b34"),
 		screenEdge: ui.Hex("#0a1117"), screenText: ui.Hex("#d6f3fa"),
@@ -47,7 +48,7 @@ var appearances = [...]appearance{
 		equals:  newKeyColors("#9bdee7", "#68b6c6", "#4e93a4", "#0f2930"),
 	},
 	{
-		name:       "瓷白",
+		name:       locales.Messages.AppearancePorcelain,
 		chassisTop: ui.Hex("#f8fbff"), chassisBottom: ui.Hex("#dce7f2"),
 		screenTop: ui.Hex("#dbe7f2"), screenBottom: ui.Hex("#edf5fc"),
 		screenEdge: ui.Hex("#afc3d9"), screenText: ui.Hex("#132c4a"),
@@ -64,11 +65,11 @@ func newKeyColors(top, bottom, edge, text string) keyColors {
 	return keyColors{top: ui.Hex(top), bottom: ui.Hex(bottom), edge: ui.Hex(edge), text: ui.Hex(text)}
 }
 
-func (app *calculatorView) appearanceMenu(redraw func()) *mygo.MenuItem {
+func (app *calculatorView) appearanceMenu(messages locales.Messages, redraw func()) *mygo.MenuItem {
 	items := make([]*mygo.MenuItem, 0, len(appearances))
 	for index := range appearances {
 		items = append(items, &mygo.MenuItem{
-			Label:   appearances[index].name,
+			Label:   appearances[index].name(messages),
 			Type:    mygo.MenuItemRadio,
 			Checked: index == app.appearance,
 			Click: func(*mygo.MenuItem, *mygo.Window) {
@@ -77,5 +78,5 @@ func (app *calculatorView) appearanceMenu(redraw func()) *mygo.MenuItem {
 			},
 		})
 	}
-	return &mygo.MenuItem{Label: "外观", Submenu: items}
+	return &mygo.MenuItem{Label: messages.AppearanceMenu(), Submenu: items}
 }

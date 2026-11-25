@@ -3,5 +3,9 @@
   "slug": "calculator",
   "identifier": "com.github.shangzongyu.caculator",
   "version": "0.1.0",
-  "out": "build"
+  "out": "build",
+  "i18n": {
+    "dir": "locales",
+    "source": "zh-Hans"
+  }
 }

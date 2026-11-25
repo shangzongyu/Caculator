@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/egoist/mygo/ui"
+	"github.com/shangzongyu/Caculator/locales"
 )
 
 const (
@@ -38,8 +39,13 @@ var (
 		"123-",
 		".0=+",
 	}
-	keyNames = map[rune]string{clearKey: "清空", backspaceKey: "退格", '+': "加", '-': "减", '*': "乘", '/': "除", '=': "等于", '.': "小数点"}
-	keyFaces = map[rune]string{clearKey: "清空", backspaceKey: "⌫", '-': "−", '*': "×", '/': "÷"}
+	keyNames = map[rune]func(locales.Messages) string{
+		clearKey: locales.Messages.KeyClear, backspaceKey: locales.Messages.KeyBackspace,
+		'+': locales.Messages.KeyAdd, '-': locales.Messages.KeySubtract,
+		'*': locales.Messages.KeyMultiply, '/': locales.Messages.KeyDivide,
+		'=': locales.Messages.KeyEquals, '.': locales.Messages.KeyDecimalPoint,
+	}
+	keyFaces = map[rune]string{backspaceKey: "⌫", '-': "−", '*': "×", '/': "÷"}
 )
 
 func keyFace(key rune) string {
@@ -77,11 +83,12 @@ func (app *calculatorView) display(c *ui.Context, style *appearance, width, scal
 			pending := formatResult(calc.accumulator) + " " + keyFace(calc.operator)
 			displayLine(c, pending, pendingFontSize*scale, available).TextColor(style.screenMuted)
 		}
-		color := style.screenText
+		result, color := calc.Display(), style.screenText
 		if calc.state == showingError {
+			result = locales.In(c.Locale()).CalculationError()
 			color = style.screenError
 		}
-		displayLine(c, calc.Display(), resultFontSize*scale, available).TextColor(color).Role(ui.RoleStatus)
+		displayLine(c, result, resultFontSize*scale, available).TextColor(color).Role(ui.RoleStatus)
 	})
 }
 
@@ -109,9 +116,9 @@ func (app *calculatorView) button(c *ui.Context, style *appearance, key rune, sc
 	face := keyFace(key)
 	button := ui.ButtonBase(c.Key(string(key))).Center().Radius(keyRadius * scale).FocusRingColor(style.focus).
 		TextCaret(ui.Rect{}).InputMethod(false).HandleInput(app.calc.keyboard)
-	name := keyNames[key]
-	if name == "" {
-		name = face
+	name := face
+	if translate := keyNames[key]; translate != nil {
+		name = translate(locales.In(c.Locale()))
 	}
 	button.Label(name)
 
@@ -119,6 +126,7 @@ func (app *calculatorView) button(c *ui.Context, style *appearance, key rune, sc
 	switch {
 	case key == clearKey:
 		colors, size = style.actions, 16
+		face = name
 	case key == backspaceKey || strings.ContainsRune(operatorKeys, key):
 		colors = style.actions
 	case key == '=':

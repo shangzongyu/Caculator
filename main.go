@@ -5,6 +5,7 @@ import (
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
+	"github.com/shangzongyu/Caculator/locales"
 )
 
 const (
@@ -18,16 +19,15 @@ func main() {
 	var app calculatorView
 	mygo.App.WhenReady(func() {
 		window := mygo.NewWindow(mygo.WindowOptions{
-			Title: "计算器", Width: windowWidth, Height: windowHeight,
+			Title: locales.WindowTitle(), Width: windowWidth, Height: windowHeight,
 			MinWidth: minWindowWidth, MinHeight: minWindowHeight, UseContentSize: true,
 			Content: ui.View(app.view),
 		})
-		appearance := app.appearanceMenu(window.Invalidate)
-		if menu := mygo.App.Menu(); menu != nil {
-			menu.Append(appearance)
-		} else {
-			mygo.App.SetMenu(mygo.NewMenu([]*mygo.MenuItem{appearance}))
-		}
+		mygo.App.SetMenu(app.menu(mygo.App.Locale(), window.Invalidate))
+		mygo.App.OnLocaleChanged(func(locale string) {
+			window.SetTitle(locales.In(locale).WindowTitle())
+			mygo.App.SetMenu(app.menu(locale, window.Invalidate))
+		})
 	})
 	if err := mygo.App.Run(); err != nil {
 		log.Fatal(err)
