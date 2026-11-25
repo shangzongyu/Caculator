@@ -12,13 +12,14 @@ mise install
 mise run start
 ```
 
-mise.toml 固定项目使用的 Go 版本。MyGo 和它的命令行工具由 Go 模块管理，首次运行会自动下载。
+mise.toml 固定项目使用的 Go 和 golangci-lint 版本。MyGo 和它的命令行工具由 Go 模块管理，首次运行会自动下载。
 
 | 命令 | 用途 |
 | --- | --- |
 | `mise run start` | 启动计算器 |
 | `mise run dev` | 启动应用并监听源码变化，保存后热重载 |
 | `mise run test` | 运行计算逻辑和界面测试 |
+| `mise run lint` | 运行 golangci-lint，检查代码和 Go 格式 |
 | `mise run vet` | 运行 Go 静态检查 |
 | `mise run build` | 为当前平台打包，产物位于 `build/` |
 

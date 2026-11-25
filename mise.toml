@@ -1,5 +1,6 @@
 [tools]
 go = "1.27.4"
+golangci-lint = "2.15.0"
 
 [tasks.start]
 description = "启动计算器"
@@ -12,6 +13,10 @@ run = "go tool mygo dev"
 [tasks.test]
 description = "运行单元和界面测试"
 run = "go test ./..."
+
+[tasks.lint]
+description = "运行 golangci-lint 静态检查"
+run = "golangci-lint run --config .golangci.yml ./..."
 
 [tasks.vet]
 description = "运行 Go 静态检查"
